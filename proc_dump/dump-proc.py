@@ -17,11 +17,12 @@ def main(args):
     except IndexError:
         sys.exit(f"Usage: {sys.argv[0]} OFFSET")
 
-    with open(elf_name, 'rb') as f:
-        syms = { addr: name for addr, name in symbols.from_elf(f) }
+    #with open(elf_name, 'rb') as f:
+        ##syms = { addr: name for addr, name in symbols.from_elf(f) }
 
     addr = offset + 0x08000000
-    name = syms[addr] if addr in syms else f'ProcScr_Unk_{offset + 0x08000000:08X}'
+    #name = syms[addr] if addr in syms else f'ProcScr_Unk_{offset + 0x08000000:08X}'
+    name = f'ProcScr_Unk_{offset + 0x08000000:08X}'
 
     print(f"struct ProcCmd CONST_DATA {name}[] = " + "{")
 
@@ -35,7 +36,8 @@ def main(args):
             arg = read_int(f, 2)
             ptr = read_int(f, 4)
 
-            sym = syms[ptr] if ptr in syms else f"0x{ptr:08X}"
+            #sym = syms[ptr] if ptr in syms else f"0x{ptr:08X}"
+            sym = f"0x{ptr:08X}"
 
             if opc == 0x00:
                 print("    PROC_END,")
@@ -66,7 +68,7 @@ def main(args):
                 continue
 
             if opc == 0x07:
-                print(f"    PROC_START_MAIN_BUGGED({sym}),")
+                print(f"    PROC_START_MAIN({sym}),")
                 continue
 
             if opc == 0x08:
@@ -133,7 +135,7 @@ def main(args):
                 continue
 
             if opc == 0x17:
-                print("    PROC_END_DUPLICATES,")
+                print(f"    PROC_END_DUPLICATES,")
                 continue
 
             if opc == 0x18:
@@ -141,13 +143,86 @@ def main(args):
                 continue
 
             if opc == 0x19:
-                print("    PROC_19,")
+                print(f"    PROC_19({sym}, {arg}),")
+                continue
+
+            if opc == 0x1A:
+                print(f"    PROC_1A({sym}, {arg}),")
+                continue
+
+            if opc == 0x1B:
+                print(f"    PROC_1B({arg}),")
+                continue
+
+            if opc == 0x1C:
+                print(f"    PROC_1C({sym}, {arg}),")
+                continue
+
+            if opc == 0x1D:
+                print(f"    PROC_1D({arg}),")
+                continue
+
+            if opc == 0x1E:
+                print(f"    PROC_1E({arg}),")
+                continue
+
+            if opc == 0x1F:
+                print(f"    PROC_1F({sym}, {arg}),")
+                continue
+
+            if opc == 0x20:
+                print(f"    PROC_20({sym}, {arg}),")
+                continue
+
+            if opc == 0x21:
+                print(f"    PROC_21({sym}, {arg}),")
+                continue
+
+            if opc == 0x22:
+                print(f"    PROC_22({sym}, {arg}),")
+                continue
+
+            if opc == 0x23:
+                print(f"    PROC_23({sym}, {arg}),")
+                continue
+
+            if opc == 0x24:
+                print(f"    PROC_24({sym}, {arg}),")
+                continue
+
+            if opc == 0x25:
+                print(f"    PROC_FADE_TO_WHITE({sym}, {arg}),")
+                continue
+
+            if opc == 0x26:
+                print(f"    PROC_FADE_FROM_WHITE({sym}, {arg}),")
+                continue
+
+            if opc == 0x27:
+                print(f"    PROC_27({sym}, {arg}),")
+                continue
+
+            if opc == 0x28:
+                print(f"    PROC_28({sym}, {arg}),")
+                continue
+
+            if opc == 0x29:
+                print(f"    PROC_29({arg}),")
+                continue
+
+            if opc == 0x2A:
+                print(f"    PROC_2A({sym}, {arg}),")
+                continue
+
+            if opc == 0x2B:
+                print(f"    PROC_2B({sym}, {arg}),")
                 continue
 
             break
 
     print("};")
     print(f"// end at {offset+0x08000000:08X}")
+    print() 
 
 if __name__ == '__main__':
     main(sys.argv[1:])
