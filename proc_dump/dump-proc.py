@@ -44,98 +44,98 @@ def main(args):
                 break
 
             if opc == 0x01:
-                print(f"    PROC_NAME({sym}),")
+                print(f"    PROC_NAME({sym}, {arg}),")
                 continue
 
             if opc == 0x02:
-                print(f"    PROC_CALL({sym}),")
+                print(f"    PROC_CALL({sym}, {arg}),")
                 continue
 
             if opc == 0x03:
-                print(f"    PROC_REPEAT({sym}),")
+                print(f"    PROC_REPEAT({sym}, {arg}),")
                 continue
 
             if opc == 0x04:
-                print(f"    PROC_SET_END_CB({sym}),")
+                print(f"    PROC_SET_END_CB({sym}, {arg}),")
                 continue
 
             if opc == 0x05:
-                print(f"    PROC_START_CHILD({sym}),")
+                print(f"    PROC_START_CHILD({sym}, {arg}),")
                 continue
 
             if opc == 0x06:
-                print(f"    PROC_START_CHILD_BLOCKING({sym}),")
+                print(f"    PROC_START_CHILD_BLOCKING({sym}, {arg}),")
                 continue
 
             if opc == 0x07:
-                print(f"    PROC_START_MAIN({sym}),")
+                print(f"    PROC_START_MAIN({sym}, {arg}),")
                 continue
 
             if opc == 0x08:
-                print(f"    PROC_WHILE_EXISTS({sym}),")
+                print(f"    PROC_WHILE_EXISTS({sym}, {arg}),")
                 continue
 
             if opc == 0x09:
-                print(f"    PROC_END_EACH({sym}),")
+                print(f"    PROC_END_EACH({sym}, {arg}),")
                 continue
 
             if opc == 0x0A:
-                print(f"    PROC_BREAK_EACH({sym}),")
+                print(f"    PROC_BREAK_EACH({sym}, {arg}),")
                 continue
 
             if opc == 0x0B:
-                print(f"PROC_LABEL({arg}),")
+                print(f"PROC_LABEL({sym}, {arg}),")
                 continue
 
             if opc == 0x0C:
-                print(f"    PROC_GOTO({arg}),")
+                print(f"    PROC_GOTO({sym}, {arg}),")
                 continue
 
             if opc == 0x0D:
-                print(f"    PROC_JUMP({sym}),")
+                print(f"    PROC_JUMP({sym}, {arg}),")
                 break
 
             if opc == 0x0E:
                 if arg == 0:
                     print("    PROC_YIELD,")
                 else:
-                    print(f"    PROC_SLEEP({arg}),")
+                    print(f"    PROC_SLEEP({sym}, {arg}),")
                 continue
 
             if opc == 0x0F:
-                print(f"    PROC_MARK({arg}),")
+                print(f"    PROC_MARK({sym}, {arg}),")
                 continue
 
             if opc == 0x10:
-                print("    PROC_BLOCK,")
+                print(f"    PROC_BLOCK({sym}, {arg}),")
                 break
 
             if opc == 0x11:
-                print("    PROC_END_IF_DUPLICATE,")
+                print(f"    PROC_END_IF_DUPLICATE({sym}, {arg}),")
                 continue
 
             if opc == 0x12:
-                print("    PROC_SET_BIT4,")
+                print(f"    PROC_SET_BIT4({sym}, {arg}),")
                 continue
 
             if opc == 0x13:
-                print("    PROC_13,")
+                print(f"    PROC_13({sym}, {arg}),")
                 continue
 
             if opc == 0x14:
-                print(f"    PROC_WHILE({sym}),")
+                print(f"    PROC_WHILE({sym}, {arg}),")
                 continue
 
             if opc == 0x15:
-                print("    PROC_15,")
+                print(f"    PROC_15({sym}, {arg}),")
                 continue
 
             if opc == 0x16:
-                print(f"    PROC_CALL_2({sym}),")
+                print(f"    PROC_CALL_2({sym}, {arg}),")
                 continue
 
             if opc == 0x17:
-                print(f"    PROC_END_DUPLICATES,")
+                print(f"    PROC_END_DUPLICATES({sym}, {arg}),")
                 continue
 
             if opc == 0x18:
@@ -151,7 +151,7 @@ def main(args):
                 continue
 
             if opc == 0x1B:
-                print(f"    PROC_1B({arg}),")
+                print(f"    PROC_1B({sym}, {arg}),")
                 continue
 
             if opc == 0x1C:
@@ -159,11 +159,11 @@ def main(args):
                 continue
 
             if opc == 0x1D:
-                print(f"    PROC_1D({arg}),")
+                print(f"    PROC_1D({sym}, {arg}),")
                 continue
 
             if opc == 0x1E:
-                print(f"    PROC_1E({arg}),")
+                print(f"    PROC_1E({sym}, {arg}),")
                 continue
 
             if opc == 0x1F:
@@ -207,7 +207,7 @@ def main(args):
                 continue
 
             if opc == 0x29:
-                print(f"    PROC_29({arg}),")
+                print(f"    PROC_29({sym}, {arg}),")
                 continue
 
             if opc == 0x2A:

@@ -9,7 +9,7 @@
 #define PROC_SET_END_CB(apRoutine)                   { 0x04, 0x0000, (apRoutine) }
 #define PROC_START_CHILD(ap6CChild)                  { 0x05, 0x0000, (ap6CChild) }
 #define PROC_START_CHILD_BLOCKING(ap6CChild)         { 0x06, 0x0001, (ap6CChild) }
-#define PROC_START_MAIN(ap6CMain)                    { 0x07, 0x0000, (ap6CMain) }
+#define PROC_START_MAIN(ap6CMain)                    { 0x07, 0x0003, (ap6CMain) }
 #define PROC_WHILE_EXISTS(ap6CToCheck)               { 0x08, 0x0000, (ap6CToCheck) }
 #define PROC_END_EACH(ap6CToCheck)                   { 0x09, 0x0000, (ap6CToCheck) }
 #define PROC_BREAK_EACH(ap6CToCheck)                 { 0x0A, 0x0000, (ap6CToCheck) }
