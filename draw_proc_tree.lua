@@ -5,13 +5,13 @@ require "util/press_input"
 -- Config
 config = {
 	key = {
-		scroll_up   = "numpad-",
-		scroll_down = "numpad+",
+		scroll_up   = "F5", 
+		scroll_down = "F4",
 		
-		expand_name = "numpad*",
-		shrink_name = "numpad/",
+		expand_name = "F3",
+		shrink_name = "F2",
 		
-		toggle      = "numpad9",
+		toggle      = "F6",
 	},
 	
 	max_tree_depth = 10,
@@ -80,6 +80,24 @@ end
 -- memory.registerexec(0x08002C86, function()
 	-- memory.writelong(memory.getregister("r0")+0x10, 0)
 -- end)
+
+-- same thing for aw2 but sadly doesn't seem to work 
+memory.registerexec(0x0801c8fe, function()
+	memory.writelong(memory.getregister("r0")+0x00, 0)
+	memory.writelong(memory.getregister("r0")+0x04, 0)
+	memory.writelong(memory.getregister("r0")+0x08, 0)
+	memory.writelong(memory.getregister("r0")+0x0C, 0)
+	memory.writelong(memory.getregister("r0")+0x10, 0)
+	memory.writelong(memory.getregister("r0")+0x14, 0)
+	memory.writelong(memory.getregister("r0")+0x18, 0)
+	memory.writelong(memory.getregister("r0")+0x1C, 0)
+	memory.writelong(memory.getregister("r0")+0x20, 0)
+	memory.writelong(memory.getregister("r0")+0x24, 0)
+	memory.writelong(memory.getregister("r0")+0x28, 0)
+	memory.writelong(memory.getregister("r0")+0x2C, 0)
+	memory.writelong(memory.getregister("r0")+0x30, 0)
+end)
+
 
 gui.register(function()
 	handle_input()
