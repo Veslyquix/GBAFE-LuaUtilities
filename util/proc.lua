@@ -178,11 +178,11 @@ proc = {
 	end,
 	
 	proc_is_halted = function(pointer)
-		return memory.readbyte(pointer+0x24) ~= 0
+		return memory.readbyte(pointer+0x24) ~= 0 -- in aw2, +0x28 isn't set during sleep 
 	end,
 	
 	proc_get_halt_count = function(pointer)
-		return memory.readbyte(pointer+0x24)
+		return memory.readbyte(pointer+0x24) -- in aw2, +0x28 isn't set during sleep 
 	end,
 	
 	proc_is_sleeping = function(pointer)
@@ -190,7 +190,7 @@ proc = {
 	end,
 	
 	proc_get_sleep_time = function(pointer)
-		return memory.readbyte(pointer+0x24)
+		return memory.readshort(pointer+0x24)
 	end,
 	
 	proc_get_start_code_ptr = function(pointer)
@@ -198,8 +198,8 @@ proc = {
 	end,
 	
 	proc_get_current_code_ptr = function(pointer)
-		return memory.readlong(pointer+0x04)
-	end,
+		return memory.readlong(pointer+0x08) -- +0x08 in aw2, +0x04 is usually but not always proc_Script / +0x00 
+	end, -- r0=0x849e818 - after war room, wrong name 
 	
 	proc_get_state_summary = function(pointer)
 		local code_start   = proc.proc_get_start_code_ptr(pointer)
