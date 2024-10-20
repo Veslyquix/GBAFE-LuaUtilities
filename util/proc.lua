@@ -21,15 +21,23 @@ proc = {
         -- hits 0x801CFAC as UpdateSleep  
             ptr_sleep_handle = 0x801cfad, 
 			names = {
-				[0x8581500] = "Intro",
-				[0x8581Cf8] = "Title",
-				[0x849e818] = "Main Menu",
+                [0x08580F24] = "Intro A", 
+				[0x08581500] = "Intro B",
+				[0x08581C68] = "Title A",
+				[0x08581CF8] = "Title B",
+				[0x0849e818] = "Main Menu",
 				[0x0849EB34] = "Campaign",
+				[0x08616FD4] = "Campaign Intro",
+				[0x0848A140] = "Dialogue",
+				[0x08614460] = "WM Listener",
+				[0x08614390] = "WM_MoveScope",
+				[0x08614370] = "WM_DrawDifficultyStars",
+				[0x08615BBC] = "WM_ConfirmExit",
 				[0x0849EC1C] = "War Room",
 				[0x0849ECE0] = "Versus",
 				[0x084C3138] = "Battle Maps",
-				[0x0849EA94] = "Design Room",
 				[0x0849EC8C] = "Link",
+				[0x0849EA94] = "Design Room",
 				[0x0849EAAC] = "Sound Room",
 			}
         -- 
@@ -155,27 +163,7 @@ proc = {
 		
 		return proc.get_reference().ptr_proc_pool + (0x6C * index)
 	end,
-	
-	proc_read_name = function(pointer)
-		local name = proc.get_reference().names[memory.readlong(pointer)]
-		
-		if name ~= nil then
-			return name
-		else
-			local nameptr = memory.readlong(pointer+0x10)
-			
-            
-            if gba.game_code == "AW2E" then 
-                return "--" 
-            end 
-            
-			if nameptr ~= 0 then
-				return gba.read_cstring(nameptr)
-			else
-				return "----"
-			end
-		end
-	end,
+
 	
 	proc_is_halted = function(pointer)
 		return memory.readbyte(pointer+0x24) ~= 0 -- in aw2, +0x28 isn't set during sleep 
@@ -197,13 +185,54 @@ proc = {
 		return memory.readlong(pointer+0x00)
 	end,
 	
+	proc_get_start2_code_ptr = function(pointer)
+		return memory.readlong(pointer+0x04)
+	end,
+    
 	proc_get_current_code_ptr = function(pointer)
 		return memory.readlong(pointer+0x08) -- +0x08 in aw2, +0x04 is usually but not always proc_Script / +0x00 
 	end, -- r0=0x849e818 - after war room, wrong name 
 	
+    
+    proc_get_name = function(pointer) 
+		local code_start   = proc.proc_get_start_code_ptr(pointer)
+		local code_current = proc.proc_get_current_code_ptr(pointer)
+		local code_start2 = proc.proc_get_start2_code_ptr(pointer)
+        local code_diff = (code_current - code_start)
+        if code_diff < 0 then 
+            code_start = code_start2
+            code_diff = (code_current - code_start2) 
+        end 
+        return code_start 
+    end, 
+    
+	
+	proc_read_name = function(pointer)
+		-- local name = proc.get_reference().names[memory.readlong(pointer)]
+		local name = proc.get_reference().names[proc.proc_get_name(pointer)]
+		
+		if name ~= nil then
+			return name
+		else
+			local nameptr = memory.readlong(pointer+0x10)
+			
+            
+            if gba.game_code == "AW2E" then 
+                return "--" 
+            end 
+            
+			if nameptr ~= 0 then
+				return gba.read_cstring(nameptr)
+			else
+				return "----"
+			end
+		end
+	end,
+    
 	proc_get_state_summary = function(pointer)
 		local code_start   = proc.proc_get_start_code_ptr(pointer)
 		local code_current = proc.proc_get_current_code_ptr(pointer)
+		local code_start2 = proc.proc_get_start2_code_ptr(pointer)
 		
 		local activity_str = (function()
 			if proc.proc_is_halted(pointer) then
@@ -217,7 +246,13 @@ proc = {
 			return "-"
 		end)()
 		
-		return string.format("%X+%X (%s)", code_start, (code_current - code_start), activity_str)
+        local code_diff = (code_current - code_start)
+        if code_diff < 0 then 
+            code_start = code_start2
+            code_diff = (code_current - code_start2) 
+        end 
+        
+		return string.format("%X+%X (%s)", code_start, code_diff, activity_str)
 	end,
 	
 	proc_get_next = function(pointer)

@@ -1,4 +1,12 @@
 
+struct ProcCmd
+{
+    short opcode;
+    short dataImm;
+    const void* dataPtr;
+};
+#define CONST_DATA SECTION(".data")
+
 // see <https://github.com/FireEmblemUniverse/fireemblem8u/blob/c545425c9754d692175d5a95bb1751de1a94ea17/include/proc.h#L16C1-L42C67> 
 
 
@@ -9,7 +17,7 @@
 #define PROC_SET_END_CB(apRoutine)                   { 0x04, 0x0000, (apRoutine) }
 #define PROC_START_CHILD(ap6CChild)                  { 0x05, 0x0000, (ap6CChild) }
 #define PROC_START_CHILD_BLOCKING(ap6CChild)         { 0x06, 0x0001, (ap6CChild) }
-#define PROC_START_MAIN(ap6CMain)                    { 0x07, 0x0003, (ap6CMain) }
+#define PROC_START_MAIN(ap6CMain, root)              { 0x07, root, (ap6CMain) }
 #define PROC_WHILE_EXISTS(ap6CToCheck)               { 0x08, 0x0000, (ap6CToCheck) }
 #define PROC_END_EACH(ap6CToCheck)                   { 0x09, 0x0000, (ap6CToCheck) }
 #define PROC_BREAK_EACH(ap6CToCheck)                 { 0x0A, 0x0000, (ap6CToCheck) }
@@ -19,19 +27,24 @@
 #define PROC_SLEEP(aTime)                            { 0x0E, aTime,  0 }
 #define PROC_MARK(aMark)                             { 0x0F, aMark,  0 }
 #define PROC_BLOCK                                   { 0x10, 0x0000, 0 }
-#define PROC_END_IF_DUPLICATE                        { 0x11, 0x0000, 0 }
-#define PROC_SET_BIT4                                { 0x12, 0x0000, 0 }
+#define PROC_END_IF_DUPLICATE                        { 0x11, 0x0000, 0 } 
+#define PROC_12                                      { 0x12, 0x0000, 0 } // PROC_SET_BIT4
 #define PROC_13                                      { 0x13, 0x0000, 0 }
 #define PROC_WHILE(aprRoutine)                       { 0x14, 0x0000, (aprRoutine) }
 #define PROC_15                                      { 0x15, 0x0000, 0 }
 #define PROC_CALL_2(aprRoutine)                      { 0x16, 0x0000, (aprRoutine) }
-#define PROC_END_DUPLICATES                          { 0x17, 0x0000, 0 }
+#define PROC_END_DUPLICATES                          { 0x17, 0x0000, 0 } // PROC_END_DUPLICATES
 #define PROC_CALL_ARG(aprRoutine, aArgument)         { 0x18, (aArgument), (aprRoutine) }
 #define PROC_19                                      { 0x19, 0x0000, 0 }
 #define PROC_YIELD                                   PROC_SLEEP(0)
-
-
-
+#define PROC_1A(word, arg)                           { 0x1A, (arg), (word) }
+#define PROC_1B(arg)                                 { 0x1B, (arg), 0 }
+#define PROC_1C(word, arg)                           { 0x1C, (arg), (word) }
+#define PROC_1D(arg)                                 { 0x1D, (arg), 0 }
+#define PROC_1E(arg)                                 { 0x1E, (arg), 0 }
+#define PROC_29(arg)                                 { 0x29, (arg), 0 }
+#define PROC_2A                                      { 0x2A, 0x0000, 0 } 
+#define PROC_2B(word, arg)                           { 0x2B, (arg), (word) }
 
 
 
