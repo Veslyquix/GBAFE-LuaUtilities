@@ -11,7 +11,7 @@ config = {
 		expand_name = "F3",
 		shrink_name = "F2",
 		
-		toggle      = "F1",
+		toggle      = "F6",
 	},
 	
 	max_tree_depth = 10,
