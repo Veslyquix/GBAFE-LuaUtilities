@@ -1,108 +1,97 @@
 require "util/gba"
 
+-- Loads util/names/<code>.lua (hand-picked names), optionally layered on top
+-- of a base table (e.g. auto-generated decomp symbols) whose entries it
+-- overrides on collision. Missing name files just yield no hand-picked names.
+local function load_names(code, base)
+	local result = {}
+
+	if base ~= nil then
+		for address, name in pairs(base) do
+			result[address] = name
+		end
+	end
+
+	local ok, curated = pcall(require, "util/names/" .. code)
+
+	if ok then
+		for address, name in pairs(curated) do
+			result[address] = name
+		end
+	end
+
+	return result
+end
+
 proc = {
 	references = {
-        AW2E = { -- AW2U (see rom header + 0xAC) 
-        -- [849EB7C..849EB84]? -- break point on known proc data read on new campaign 
-        -- 1c8f4 proc start? r0 ProcPtr, r1 root tree -- went to r14 a couple times? 
-            -- calls 1d264 
+        AW2E = { -- AW2U (see rom header + 0xAC)
+        -- [849EB7C..849EB84]? -- break point on known proc data read on new campaign
+        -- 1c8f4 proc start? r0 ProcPtr, r1 root tree -- went to r14 a couple times?
+            -- calls 1d264
             -- 200E414 points to sProcArray
-            ptr_proc_pool = 0x200E390,  
-            proc_pool_size = 0x21, -- maybe? since 0x200e414 is 0x84 bytes away divided by 4 
-        -- [200e390]! hits 0x801C878 which seems to be ProcInit 
-        -- 200e410, 200e414, 200e418,  
-        -- 200e414 is sProcAllocListHead maybe? 
+            ptr_proc_pool = 0x200E390,
+            proc_pool_size = 0x21, -- maybe? since 0x200e414 is 0x84 bytes away divided by 4
+        -- [200e390]! hits 0x801C878 which seems to be ProcInit
+        -- 200e410, 200e414, 200e418,
+        -- 200e414 is sProcAllocListHead maybe?
         -- 200e418 - 200e434 is gProcTreeRootArray
-            ptr_proc_forest = 0x200e418, 
-            proc_forest_size = 8, 
-        -- [84C3138+0x40..84C3138+0x47]? // 8th entry in LoadBattleMap proc at 0x084C3138 
-        -- hits 0x801CFC8 as InitSleep 
-        -- [200d6e8+0x24]? ProcRam+0x24 as sleep timer 
-        -- hits 0x801CFAC as UpdateSleep  
-            ptr_sleep_handle = 0x801cfad, 
-			names = {
-                [0x08580F24] = "Intro A", 
-				[0x08581500] = "Intro B",
-				[0x08581C68] = "Title A",
-				[0x08581CF8] = "Title B",
-				[0x0849e818] = "Main Menu",
-				[0x0849EB34] = "Campaign",
-				[0x08616FD4] = "Campaign Intro",
-				[0x0848A140] = "Dialogue",
-				[0x08614460] = "WM Listener",
-				[0x08614390] = "WM_MoveScope",
-				[0x08614370] = "WM_DrawDifficultyStars",
-				[0x08615BBC] = "WM_ConfirmExit",
-				[0x0849EC1C] = "War Room",
-				[0x0849ECE0] = "Versus",
-				[0x084C3138] = "Battle Maps",
-				[0x0849EC8C] = "Link",
-				[0x0849EA94] = "Design Room",
-				[0x0849EAAC] = "Sound Room",
-			}
-        -- 
-        
-        }, 
+            ptr_proc_forest = 0x200e418,
+            proc_forest_size = 8,
+        -- [84C3138+0x40..84C3138+0x47]? // 8th entry in LoadBattleMap proc at 0x084C3138
+        -- hits 0x801CFC8 as InitSleep
+        -- [200d6e8+0x24]? ProcRam+0x24 as sleep timer
+        -- hits 0x801CFAC as UpdateSleep
+            ptr_sleep_handle = 0x801cfad,
+			-- decomp symbols (util/names/AW2E_decomp.lua) as a base, with
+			-- hand-picked names (util/names/AW2E.lua) taking priority
+			names = load_names("AW2E", require "util/names/AW2E_decomp")
+        --
+
+        },
 		BE8E = {
 			-- FE8U
-			
+
 			ptr_proc_forest  = 0x02026A70, -- gProcTreeRootArray
 			proc_forest_size = 8,
-			
+
 			ptr_proc_pool    = 0x02024E68, -- sProcArray
 			proc_pool_size   = 0x40,
-			
+
 			ptr_sleep_handle = 0x08003291, -- UpdateSleep
-			
-			names = {
-			}
+
+			names = load_names("BE8E")
 		},
-		
+
 		AE7E = {
 			-- FE7U
-			
+
 			ptr_proc_forest  = 0x02026A30,
 			proc_forest_size = 8,
-			
+
 			ptr_proc_pool    = 0, -- TODO
 			proc_pool_size   = 0, -- TODO
-			
+
 			ptr_sleep_handle = -1, -- TODO
-			
-			names = {
-				[0x8B924BC] = "Game Control",
-				[0x8CE3C54] = "Main Menu Logic"
-			}
+
+			names = load_names("AE7E")
 		},
-		
+
 		AE7J = {
 			-- FE7J
-			
+
 			ptr_proc_forest  = 0x02026A28,
 			proc_forest_size = 8,
-			
+
 			ptr_proc_pool    = 0x02024E20,
 			proc_pool_size   = 0x40,
-			
+
 			ptr_sleep_handle = -1, -- TODO
-			
-			names = {
-				[0x8C01744] = "Game Control",
-				[0x8C01DBC] = "Map Main Logic",
-				[0x8C02630] = "Player Phase Logic",
-				[0x8C02870] = "Move Range Gfx",
-				[0x8C05464] = "[MAPTASK]",
-				[0x8D64F4C] = "Moving Unit Gfx",
-				[0x8DAD3A4] = "Main Menu Logic",
-				[0x8C09BF4] = "Any Menu",
-				[0x8C09C34] = "Menu Command",
-				[0x8D8B2D8] = "Goal Box",
-				[0x8D8B1A0] = "Terrain Box",
-				[0x8D8B200] = "Minimug Box"
-			}
+
+			names = load_names("AE7J")
 		}
 	},
-	
+
 	proc_instruction_formats = {
 		[0x0000] = "END",
 		[0x0001] = "NAME {narg}",
@@ -198,8 +187,9 @@ proc = {
 	},
 
 	-- opcodes after which the real interpreter stops reading the script linearly
+	-- (PROC_JUMP/0x0D isn't included here - it's followed to its target instead of stopping)
 	ends_script = function(opc)
-		return opc == 0x00 or opc == 0x0D or opc == 0x10
+		return opc == 0x00 or opc == 0x10
 	end,
 
 	symbol_for = function(address)
@@ -240,7 +230,9 @@ proc = {
 	end,
 
 	-- reads raw 8-byte proc instructions starting at `address` until a
-	-- terminating opcode (END/JUMP/BLOCK) or `max_instructions` is hit
+	-- terminating opcode (END/BLOCK) or `max_instructions` is hit.
+	-- PROC_JUMP doesn't stop the listing - it continues from the jump target,
+	-- same as the real interpreter would.
 	disassemble_script = function(address, max_instructions)
 		local lines = {}
 		local addr = address
@@ -252,10 +244,14 @@ proc = {
 
 			table.insert(lines, proc.format_instruction(opc, arg, ptr))
 
-			addr = addr + 8
+			if opc == 0x0D then
+				addr = ptr
+			else
+				addr = addr + 8
 
-			if proc.ends_script(opc) then
-				break
+				if proc.ends_script(opc) then
+					break
+				end
 			end
 		end
 
