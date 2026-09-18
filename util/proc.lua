@@ -155,6 +155,112 @@ proc = {
 	get_reference = function()
 		return proc.references[gba.game_code]
 	end,
+
+	-- opcode => {mnemonic, field layout}
+	-- field layout: "none" | "ptr" | "arg" | "both" | "sleep" (based on proc.h macro defs;
+	-- opcodes with no confirmed layout fall back to "both" so no data is hidden)
+	instruction_defs = {
+		[0x00] = {"PROC_END", "none"},
+		[0x01] = {"PROC_NAME", "ptr"},
+		[0x02] = {"PROC_CALL", "ptr"},
+		[0x03] = {"PROC_REPEAT", "ptr"},
+		[0x04] = {"PROC_SET_END_CB", "ptr"},
+		[0x05] = {"PROC_START_CHILD", "ptr"},
+		[0x06] = {"PROC_START_CHILD_BLOCKING", "ptr"},
+		[0x07] = {"PROC_START_MAIN", "both"},
+		[0x08] = {"PROC_WHILE_EXISTS", "ptr"},
+		[0x09] = {"PROC_END_EACH", "ptr"},
+		[0x0A] = {"PROC_BREAK_EACH", "ptr"},
+		[0x0B] = {"PROC_LABEL", "arg"},
+		[0x0C] = {"PROC_GOTO", "arg"},
+		[0x0D] = {"PROC_JUMP", "ptr"},
+		[0x0E] = {"PROC_SLEEP", "sleep"},
+		[0x0F] = {"PROC_MARK", "arg"},
+		[0x10] = {"PROC_BLOCK", "none"},
+		[0x11] = {"PROC_END_IF_DUPLICATE", "none"},
+		[0x12] = {"PROC_12", "none"},
+		[0x13] = {"PROC_13", "none"},
+		[0x14] = {"PROC_WHILE", "ptr"},
+		[0x15] = {"PROC_15", "none"},
+		[0x16] = {"PROC_CALL_2", "ptr"},
+		[0x17] = {"PROC_END_DUPLICATES", "none"},
+		[0x18] = {"PROC_CALL_ARG", "both"},
+		[0x19] = {"PROC_19", "none"},
+		[0x1A] = {"PROC_1A", "both"},
+		[0x1B] = {"PROC_1B", "arg"},
+		[0x1C] = {"PROC_1C", "both"},
+		[0x1D] = {"PROC_1D", "arg"},
+		[0x1E] = {"PROC_1E", "arg"},
+		[0x25] = {"PROC_FADE_TO_WHITE", "arg"},
+		[0x26] = {"PROC_FADE_FROM_WHITE", "arg"},
+		[0x29] = {"PROC_29", "arg"},
+		[0x2A] = {"PROC_2A", "none"},
+	},
+
+	-- opcodes after which the real interpreter stops reading the script linearly
+	ends_script = function(opc)
+		return opc == 0x00 or opc == 0x0D or opc == 0x10
+	end,
+
+	symbol_for = function(address)
+		local name = proc.get_reference().names[address]
+
+		if name ~= nil then
+			return name
+		end
+
+		return string.format("0x%08X", address)
+	end,
+
+	format_instruction = function(opc, arg, ptr)
+		local def = proc.instruction_defs[opc]
+		local mnemonic, fields
+
+		if def ~= nil then
+			mnemonic, fields = def[1], def[2]
+		else
+			mnemonic, fields = string.format("PROC_%02X", opc), "both"
+		end
+
+		if fields == "none" then
+			return mnemonic
+		elseif fields == "ptr" then
+			return string.format("%s(%s)", mnemonic, proc.symbol_for(ptr))
+		elseif fields == "arg" then
+			return string.format("%s(%d)", mnemonic, arg)
+		elseif fields == "sleep" then
+			if arg == 0 then
+				return "PROC_YIELD"
+			else
+				return string.format("PROC_SLEEP(%d)", arg)
+			end
+		else -- "both"
+			return string.format("%s(%s, %d)", mnemonic, proc.symbol_for(ptr), arg)
+		end
+	end,
+
+	-- reads raw 8-byte proc instructions starting at `address` until a
+	-- terminating opcode (END/JUMP/BLOCK) or `max_instructions` is hit
+	disassemble_script = function(address, max_instructions)
+		local lines = {}
+		local addr = address
+
+		for i = 1, max_instructions do
+			local opc = memory.readshort(addr)
+			local arg = memory.readshort(addr + 2)
+			local ptr = memory.readlong(addr + 4)
+
+			table.insert(lines, proc.format_instruction(opc, arg, ptr))
+
+			addr = addr + 8
+
+			if proc.ends_script(opc) then
+				break
+			end
+		end
+
+		return lines
+	end,
 	
 	get_proc = function(index)
 		if index < 0 or index >= proc.get_reference().proc_pool_size then
