@@ -48,6 +48,7 @@ proc_counter = 0 -- running counter during the current frame's traversal
 design_room = {
 	ptr_state = 0x0200B0B0,
 	storage = 0x0200B000,
+	aux_hook = 0x080369BC,
 }
 
 root_hooks = {
@@ -156,7 +157,17 @@ function design_room_get_state()
 		return nil
 	end
 
+	if not design_room_is_active() then
+		return nil
+	end
+
 	return pointer
+end
+
+function design_room_is_active()
+	local aux = normalize_thumb_address(memory.readlong(root_hooks.aux))
+
+	return aux == design_room.aux_hook
 end
 
 function design_room_mode_name(mode)
@@ -200,7 +211,6 @@ end
 function print_root_hooks()
 	local main = memory.readlong(root_hooks.main)
 	local aux = memory.readlong(root_hooks.aux)
-	local frame = memory.readlong(root_hooks.frame)
 	local phase_done = memory.readbyte(root_hooks.phase_done)
 	local frame_mask = memory.readlong(root_hooks.frame_mask)
 	local in_immediate_copy = memory.readbyte(root_hooks.in_immediate_copy)
@@ -208,7 +218,7 @@ function print_root_hooks()
 	vba_console:print_line("ROOT HOOKS")
 	vba_console:print_line(string.format("  main 0x%08X %s", main, root_hook_name(main)))
 	vba_console:print_line(string.format("  aux  0x%08X %s", aux, root_hook_name(aux)))
-	vba_console:print_line(string.format("  frame %d  mask 0x%X  phase %d  dma-now %d", frame, frame_mask, phase_done, in_immediate_copy))
+	vba_console:print_line(string.format("  mask 0x%X  phase %d  dma-now %d", frame_mask, phase_done, in_immediate_copy))
 end
 
 function print_design_room_state()
@@ -225,7 +235,6 @@ function print_design_room_state()
 	local side = read_s8(state + 0x07)
 	local cursor_x = read_s16(state + 0x08)
 	local cursor_y = read_s16(state + 0x0A)
-	local timer = memory.readlong(state + 0x0C)
 	local action = memory.readshort(state + 0x2A)
 	local unit = memory.readshort(state + 0x24)
 	local list_index = memory.readshort(state + 0x28)
@@ -234,7 +243,7 @@ function print_design_room_state()
 
 	vba_console:print_line("DESIGN ROOM")
 	vba_console:print_line(string.format("  mode %d (%s)  substate %d  pending %d", mode, design_room_mode_name(mode), substate, pending))
-	vba_console:print_line(string.format("  cursor (%d,%d)  side %d  timer %d", cursor_x, cursor_y, side, timer))
+	vba_console:print_line(string.format("  cursor (%d,%d)  side %d", cursor_x, cursor_y, side))
 	vba_console:print_line(string.format("  action 0x%X  unit 0x%X  list %d  ring %d", action, unit, list_index, ring_index))
 	vba_console:print_line(string.format("  flags 0x%04X  panel %d  state 0x%08X", flags, panel, state))
 	print_root_hooks()
