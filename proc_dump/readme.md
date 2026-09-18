@@ -6,11 +6,21 @@ eg. cmd.exe shortcut properties: start in `C:\Users\User\Desktop\GBAFE-LuaUtilit
 `pip install pyelftools` if you haven't yet 
 
 
-Click dump.bat and enter an address. It will write to the end of procscr.txt 
+Click dump.bat and enter an address, optionally followed by a proc name. It will write to the end of procscr.txt.
+Add `-o` to replace an existing procscr.txt block and AW2E.lua names for that address.
+
+Example:
+86140D4 NewspaperBG -o
 
 Terminal usage: 
 dump-proc.py 0849EB7C
 `dump-proc.py 0849EB7C`
+
+named dump:
+dump-proc.py 86140D4 NewspaperBG --save
+
+overwrite an existing named dump:
+dump-proc.py 86140D4 NewspaperBG -o
 
 save to new file: 
 dump-proc.py 0849EB7C > procscr.txt 

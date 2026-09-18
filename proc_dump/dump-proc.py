@@ -2,10 +2,16 @@
 # -*- coding: UTF-8 -*-
 
 import sys
+import os
+import re
 import symbols
 
-rom_name = "AW2.gba"
-elf_name = "aw2.elf"
+script_dir = os.path.dirname(__file__)
+rom_name = os.path.normpath(os.path.join(script_dir, "AW2.gba"))
+elf_name = os.path.normpath(os.path.join(script_dir, "aw2.elf"))
+procscr_path = os.path.normpath(os.path.join(script_dir, "procscr.txt"))
+names_path = os.path.normpath(os.path.join(script_dir, "..", "util", "names", "AW2E.lua"))
+decomp_names_path = os.path.normpath(os.path.join(script_dir, "..", "util", "names", "AW2E_decomp.lua"))
 
 COMMANDS = {
     0x00: ("PROC_END", "none"),
@@ -121,6 +127,146 @@ def collect_defines(proc_name, instructions):
 
     return defines, ordered_defines
 
+def is_generic_decomp_name(name):
+    return (
+        re.fullmatch(r"sub_[0-9A-Fa-f]+", name) is not None
+        or re.fullmatch(r"gUnknown_[0-9A-Fa-f]+", name) is not None
+        or re.fullmatch(r"_[0-9A-Fa-f]+", name) is not None
+        or name == "NULL"
+    )
+
+def read_names(path):
+    names = {}
+
+    if not os.path.exists(path):
+        return names
+
+    with open(path, 'r') as f:
+        for line in f:
+            match = re.search(r'\[\s*0x([0-9A-Fa-f]+)\s*\]\s*=\s*"([^"]*)"', line)
+
+            if match:
+                names[int(match.group(1), base = 16)] = match.group(2)
+
+    return names
+
+def read_named_addresses(force = False):
+    named = set()
+
+    if not force:
+        named.update(read_names(names_path).keys())
+
+        for address, name in read_names(decomp_names_path).items():
+            if not is_generic_decomp_name(name):
+                named.add(address)
+
+    return named
+
+def lua_quote(text):
+    return text.replace("\\", "\\\\").replace("\"", "\\\"")
+
+def remove_lua_name_lines(lines, addresses):
+    result = []
+
+    for line in lines:
+        match = re.search(r'\[\s*0x([0-9A-Fa-f]+)\s*\]', line)
+
+        if match and int(match.group(1), base = 16) in addresses:
+            continue
+
+        result.append(line)
+
+    return result
+
+def add_names_to_lua(entries, force = False):
+    named = read_named_addresses(force)
+    new_entries = []
+    force_addresses = set(address for address, name in entries) if force else set()
+
+    for address, name in entries:
+        if force or address not in named:
+            named.add(address)
+            new_entries.append((address, name))
+
+    if len(new_entries) == 0:
+        return
+
+    with open(names_path, 'r') as f:
+        lines = f.readlines()
+
+    if force:
+        lines = remove_lua_name_lines(lines, force_addresses)
+
+    insert_at = None
+
+    for i in range(len(lines) - 1, -1, -1):
+        if lines[i].strip() == "}":
+            insert_at = i
+            break
+
+    if insert_at is None:
+        raise RuntimeError(f"Could not find closing table brace in {names_path}")
+
+    if insert_at > 0 and lines[insert_at - 1].strip() != "":
+        new_entries.insert(0, None)
+
+    formatted = []
+
+    for entry in new_entries:
+        if entry is None:
+            formatted.append("\n")
+            continue
+
+        address, name = entry
+        formatted.append(f'\t[0x{address:08X}] = "{lua_quote(name)}",\n')
+
+    lines[insert_at:insert_at] = formatted
+
+    with open(names_path, 'w') as f:
+        f.writelines(lines)
+
+def format_dump(name, ordered_defines, instructions, defines, end_offset):
+    lines = [f"struct ProcCmd CONST_DATA {name}[] = " + "{"]
+
+    for define, ptr in ordered_defines:
+        lines.append(f"#define {define} {format_define_value(ptr)}")
+
+    for opc, arg, ptr in instructions:
+        lines.append(format_instruction(opc, arg, ptr, defines))
+
+    lines.append("};")
+    lines.append(f"// end at {end_offset+0x08000000:08X}")
+    lines.append("")
+
+    return "\n".join(lines)
+
+def save_dump_to_procscr(dump_text, address, force = False):
+    if not force or not os.path.exists(procscr_path):
+        with open(procscr_path, 'a') as f:
+            f.write(dump_text)
+            f.write("\n")
+        return
+
+    with open(procscr_path, 'r') as f:
+        text = f.read()
+
+    pattern = re.compile(
+        r'struct ProcCmd CONST_DATA \S+_' + re.escape(f"{address:08X}") + r'\[\] = \{\n.*?\n\};\n// end at [0-9A-Fa-f]{8}\n?',
+        re.DOTALL,
+    )
+
+    replacement = dump_text.rstrip() + "\n"
+
+    if pattern.search(text):
+        text = pattern.sub(replacement, text, count = 1)
+    else:
+        if len(text) > 0 and not text.endswith("\n"):
+            text += "\n"
+        text += "\n" + replacement
+
+    with open(procscr_path, 'w') as f:
+        f.write(text)
+
 def format_symbol(opc, ptr, defines):
     if (opc, ptr) in defines:
         return defines[(opc, ptr)]
@@ -150,11 +296,23 @@ def format_instruction(opc, arg, ptr, defines):
     return f"    {mnemonic}({sym}, {arg}),"
 
 def main(args):
+    force = False
+    save = False
+    positional = []
+
+    for arg in args:
+        if arg in ("-o", "--overwrite"):
+            force = True
+        elif arg in ("-s", "--save"):
+            save = True
+        else:
+            positional.append(arg)
+
     try:
-        offset = 0x1FFFFFF & parse_address(args[0])
+        offset = 0x1FFFFFF & parse_address(positional[0])
 
     except IndexError:
-        sys.exit(f"Usage: {sys.argv[0]} ADDRESS")
+        sys.exit(f"Usage: {sys.argv[0]} ADDRESS [NAME] [-o] [--save]")
 
     #with open(elf_name, 'rb') as f:
         ##syms = { addr: name for addr, name in symbols.from_elf(f) }
@@ -163,28 +321,25 @@ def main(args):
     #name = syms[addr] if addr in syms else f'ProcScr_Unk_{offset + 0x08000000:08X}'
     proc_name = f'ProcScr_Unk'
 
-    if len(args) > 1:
-        proc_name = args[1]
+    if len(positional) > 1:
+        proc_name = positional[1]
 
     name = f'{proc_name}_{offset + 0x08000000:08X}'
 
     with open(rom_name, 'rb') as f:
         instructions, end_offset = read_instructions(f, offset)
 
-    define_base_name = proc_name if len(args) > 1 else name
+    define_base_name = proc_name if len(positional) > 1 else name
     defines, ordered_defines = collect_defines(define_base_name, instructions)
+    dump_text = format_dump(name, ordered_defines, instructions, defines, end_offset)
 
-    print(f"struct ProcCmd CONST_DATA {name}[] = " + "{")
+    if len(positional) > 1:
+        add_names_to_lua([(addr, proc_name)] + [(ptr, define) for define, ptr in ordered_defines], force)
 
-    for define, ptr in ordered_defines:
-        print(f"#define {define} {format_define_value(ptr)}")
+    if save or force:
+        save_dump_to_procscr(dump_text, addr, force)
 
-    for opc, arg, ptr in instructions:
-        print(format_instruction(opc, arg, ptr, defines))
-
-    print("};")
-    print(f"// end at {end_offset+0x08000000:08X}")
-    print() 
+    print(dump_text)
 
 if __name__ == '__main__':
     main(sys.argv[1:])

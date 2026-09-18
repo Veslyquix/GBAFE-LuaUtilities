@@ -1,22 +1,32 @@
 require "util/gba"
 
--- Loads util/names/<code>.lua (hand-picked names), optionally layered on top
--- of a base table (e.g. auto-generated decomp symbols) whose entries it
--- overrides on collision. Missing name files just yield no hand-picked names.
+local function is_generic_decomp_name(name)
+	return name:match("^sub_%x+$") ~= nil
+		or name:match("^gUnknown_%x+$") ~= nil
+		or name:match("^_%x+$") ~= nil
+		or name == "NULL"
+end
+
+-- Loads util/names/<code>.lua (hand-picked names), layered underneath a base
+-- table (e.g. auto-generated decomp symbols). Meaningful decomp names win on
+-- collision; hand-picked names only fill gaps or replace generic decomp names
+-- like sub_08000000/gUnknown_08000000.
 local function load_names(code, base)
 	local result = {}
-
-	if base ~= nil then
-		for address, name in pairs(base) do
-			result[address] = name
-		end
-	end
 
 	local ok, curated = pcall(require, "util/names/" .. code)
 
 	if ok then
 		for address, name in pairs(curated) do
 			result[address] = name
+		end
+	end
+
+	if base ~= nil then
+		for address, name in pairs(base) do
+			if result[address] == nil or not is_generic_decomp_name(name) then
+				result[address] = name
+			end
 		end
 	end
 
@@ -40,8 +50,9 @@ proc = {
         -- [200d6e8+0x24]? ProcRam+0x24 as sleep timer
         -- hits 0x801CFAC as UpdateSleep
             ptr_sleep_handle = 0x801cfad,
-			-- decomp symbols (util/names/AW2E_decomp.lua) as a base, with
-			-- hand-picked names (util/names/AW2E.lua) taking priority
+			-- decomp symbols (util/names/AW2E_decomp.lua) are the source of
+			-- truth, except generic sub_/gUnknown names can be replaced by
+			-- hand-picked names from util/names/AW2E.lua
 			names = load_names("AW2E", require "util/names/AW2E_decomp")
         --
 

@@ -2,10 +2,9 @@
 
 @echo off
 :loop 
-set /p "addr=Enter Address: "
+set /p "addr=Enter Address/Name: "
 
-dump-proc.py %addr%
-dump-proc.py %addr% >> procscr.txt
+dump-proc.py %addr% --save
 goto loop 
 
 pause 

@@ -1,6 +1,6 @@
 -- Auto-generated from the aw2bhr decompilation project (github: aw2bhr).
--- Do NOT hand-edit this file -- edit util/names/AW2E.lua instead, which
--- overrides/extends these entries with hand-picked names.
+-- Do NOT hand-edit this file. Meaningful names here take precedence over
+-- util/names/AW2E.lua; AW2E.lua fills gaps and replaces generic names.
 --
 -- Regenerate from a checkout of the decomp repo (aw2bhr.elf must be built) with:
 --   arm-none-eabi-nm --defined-only aw2bhr.elf \
