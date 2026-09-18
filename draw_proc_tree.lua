@@ -45,6 +45,32 @@ script_scroll = 0 -- scroll offset into the expanded proc's disassembly
 visible_proc_count = 1 -- how many procs were printed last frame (used to clamp selection)
 proc_counter = 0 -- running counter during the current frame's traversal
 
+design_room = {
+	ptr_state = 0x0200B0B0,
+	storage = 0x0200B000,
+}
+
+root_hooks = {
+	main = 0x030040D0,
+	aux = 0x030040EC,
+	frame = 0x03004008,
+	phase_done = 0x03004094,
+	frame_mask = 0x030043F4,
+	in_immediate_copy = 0x030044D0,
+
+	names = {
+		[0x0802E920] = "sub_0802E920",
+		[0x0802E940] = "sub_0802E940",
+		[0x0802E960] = "sub_0802E960",
+		[0x08036884] = "sub_08036884",
+		[0x080368E8] = "sub_080368E8",
+		[0x08036944] = "sub_08036944 (design/main)",
+		[0x080369BC] = "sub_080369BC (design/aux)",
+		[0x08036A50] = "sub_08036A50",
+		[0x08036AB8] = "sub_08036AB8",
+	},
+}
+
 function handle_input()
 	press_input:update()
 
@@ -101,6 +127,119 @@ end
 
 function make_proc_string(procPointer, nameLength)
 	return string.format("%s %s", wsextend_string(proc.proc_read_name(procPointer), nameLength), proc.proc_get_state_summary(procPointer))
+end
+
+function read_s8(address)
+	local value = memory.readbyte(address)
+
+	if value >= 0x80 then
+		value = value - 0x100
+	end
+
+	return value
+end
+
+function read_s16(address)
+	local value = memory.readshort(address)
+
+	if value >= 0x8000 then
+		value = value - 0x10000
+	end
+
+	return value
+end
+
+function design_room_get_state()
+	local pointer = memory.readlong(design_room.ptr_state)
+
+	if pointer ~= design_room.storage then
+		return nil
+	end
+
+	return pointer
+end
+
+function design_room_mode_name(mode)
+	local names = {
+		[0] = "opening script",
+		[1] = "map edit",
+		[2] = "unit menu",
+		[3] = "terrain/menu",
+		[5] = "exit prompt",
+		[6] = "script wait",
+		[7] = "closing",
+		[9] = "idle",
+	}
+
+	return names[mode] or "unknown"
+end
+
+function normalize_thumb_address(address)
+	if address % 2 == 1 then
+		return address - 1
+	end
+
+	return address
+end
+
+function root_hook_name(address)
+	local normalized = normalize_thumb_address(address)
+	local name = root_hooks.names[normalized]
+
+	if name ~= nil then
+		return name
+	end
+
+	if normalized == 0 then
+		return "none"
+	end
+
+	return string.format("0x%08X", normalized)
+end
+
+function print_root_hooks()
+	local main = memory.readlong(root_hooks.main)
+	local aux = memory.readlong(root_hooks.aux)
+	local frame = memory.readlong(root_hooks.frame)
+	local phase_done = memory.readbyte(root_hooks.phase_done)
+	local frame_mask = memory.readlong(root_hooks.frame_mask)
+	local in_immediate_copy = memory.readbyte(root_hooks.in_immediate_copy)
+
+	vba_console:print_line("ROOT HOOKS")
+	vba_console:print_line(string.format("  main 0x%08X %s", main, root_hook_name(main)))
+	vba_console:print_line(string.format("  aux  0x%08X %s", aux, root_hook_name(aux)))
+	vba_console:print_line(string.format("  frame %d  mask 0x%X  phase %d  dma-now %d", frame, frame_mask, phase_done, in_immediate_copy))
+end
+
+function print_design_room_state()
+	local state = design_room_get_state()
+
+	if state == nil then
+		return false
+	end
+
+	local flags = memory.readshort(state + 0x00)
+	local substate = memory.readshort(state + 0x02)
+	local mode = memory.readshort(state + 0x04)
+	local pending = read_s8(state + 0x06)
+	local side = read_s8(state + 0x07)
+	local cursor_x = read_s16(state + 0x08)
+	local cursor_y = read_s16(state + 0x0A)
+	local timer = memory.readlong(state + 0x0C)
+	local action = memory.readshort(state + 0x2A)
+	local unit = memory.readshort(state + 0x24)
+	local list_index = memory.readshort(state + 0x28)
+	local ring_index = read_s16(state + 0x3A)
+	local panel = read_s16(state + 0x3E)
+
+	vba_console:print_line("DESIGN ROOM")
+	vba_console:print_line(string.format("  mode %d (%s)  substate %d  pending %d", mode, design_room_mode_name(mode), substate, pending))
+	vba_console:print_line(string.format("  cursor (%d,%d)  side %d  timer %d", cursor_x, cursor_y, side, timer))
+	vba_console:print_line(string.format("  action 0x%X  unit 0x%X  list %d  ring %d", action, unit, list_index, ring_index))
+	vba_console:print_line(string.format("  flags 0x%04X  panel %d  state 0x%08X", flags, panel, state))
+	print_root_hooks()
+
+	return true
 end
 
 -- `suppressed` is true while walking the descendants of a currently-expanded
@@ -171,43 +310,18 @@ function print_footer()
 	vba_console:print_line(string.format("%s scripts  %s/%s select proc  %s/%s scroll script", config.key.toggle_script, config.key.select_prev, config.key.select_next, config.key.script_up, config.key.script_down))
 end
 
--- Uncomment the following to fix Proc Names in FE8U
--- memory.registerexec(0x08002C86, function()
-	-- memory.writelong(memory.getregister("r0")+0x10, 0)
--- end)
+function print_design_room_procs()
+	local printed_header = false
 
--- same thing for aw2 but sadly doesn't seem to work
-memory.registerexec(0x0801c8fe, function()
-	-- memory.writelong(memory.getregister("r0")+0x00, 0)
-	-- memory.writelong(memory.getregister("r0")+0x04, 0)
-	-- memory.writelong(memory.getregister("r0")+0x08, 0)
-	-- memory.writelong(memory.getregister("r0")+0x0C, 0)
-	memory.writelong(memory.getregister("r0")+0x10, 0)
-	-- memory.writelong(memory.getregister("r0")+0x14, 0)
-	-- memory.writelong(memory.getregister("r0")+0x18, 0)
-	-- memory.writelong(memory.getregister("r0")+0x1C, 0)
-	-- memory.writelong(memory.getregister("r0")+0x20, 0)
-	-- memory.writelong(memory.getregister("r0")+0x24, 0)
-	-- memory.writelong(memory.getregister("r0")+0x28, 0)
-	-- memory.writelong(memory.getregister("r0")+0x2C, 0)
-	-- memory.writelong(memory.getregister("r0")+0x30, 0)
-end)
+	for struct in proc.pool_iterator() do
+		if not printed_header then
+			vba_console:print_line("PROCS")
+			printed_header = true
+		end
 
--- for ProcJump in aw2
-memory.registerexec(0x0801cc00, function()
-	-- memory.writelong(memory.getregister("r0"), memory.getregister("r1"))
-	-- memory.writelong(memory.getregister("r0")+0x04, 0)
-	-- memory.writelong(memory.getregister("r0")+0x08, 0)
-	-- memory.writelong(memory.getregister("r0")+0x0C, 0)
-	-- memory.writelong(memory.getregister("r0")+0x10, 0)
-	-- memory.writelong(memory.getregister("r0")+0x14, 0)
-	-- memory.writelong(memory.getregister("r0")+0x18, 0)
-	-- memory.writelong(memory.getregister("r0")+0x1C, 0)
-	-- memory.writelong(memory.getregister("r0")+0x20, 0)
-	-- memory.writelong(memory.getregister("r0")+0x24, 0)
-	-- memory.writelong(memory.getregister("r0")+0x28, 0)
-end)
-
+		print_proc(1, struct)
+	end
+end
 
 gui.register(function()
 	handle_input()
@@ -217,12 +331,30 @@ gui.register(function()
 	end
 
 	proc_counter = 0
+	local in_design_room = design_room_get_state() ~= nil
 
-	for i, pointer in proc.tree_iterator() do
-		vba_console:print_line("TREE #" .. i)
+	if in_design_room then
+		print_design_room_state()
+		print_design_room_procs()
+	else
+		for i, pointer in proc.tree_iterator() do
+			vba_console:print_line("TREE #" .. i)
 
-		for struct in proc.proc_iterator(pointer) do
-			print_proc(1, struct)
+			for struct in proc.proc_iterator(pointer) do
+				print_proc(1, struct)
+			end
+		end
+
+		if proc_counter == 0 then
+			vba_console:print_line("PROC POOL")
+
+			for struct in proc.pool_iterator() do
+				print_proc(1, struct)
+			end
+
+			if proc_counter == 0 then
+				vba_console:print_line("  [no active procs]")
+			end
 		end
 	end
 

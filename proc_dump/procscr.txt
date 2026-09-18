@@ -387,3 +387,73 @@ PROC_LABEL(1),
 };
 // end at 0849E898
 
+struct ProcCmd CONST_DATA DesignRoomStart_0849E750[] = {
+    PROC_11,
+    PROC_CALL(0x0803B5F5),
+    PROC_YIELD,
+    PROC_REPEAT(0x0803B609),
+    PROC_END,
+};
+// end at 0849E778
+
+struct ProcCmd CONST_DATA DesignRoom2Start_0848925C[] = {
+    PROC_CALL(0x080110ED),
+    PROC_YIELD,
+    PROC_REPEAT(0x0801113D),
+    PROC_END,
+};
+// end at 0848927C
+
+struct ProcCmd CONST_DATA DesignRoomSave_0849E750[] = {
+    PROC_11,
+    PROC_CALL(0x0803B5F5),
+    PROC_YIELD,
+    PROC_REPEAT(0x0803B609),
+    PROC_END,
+};
+// end at 0849E778
+
+struct ProcCmd CONST_DATA DesignRoomLoad1_0848927C[] = {
+    PROC_2A,
+    PROC_SET_END_CB(0x080111AD),
+    PROC_REPEAT(0x0801117D),
+    PROC_END,
+};
+// end at 0848929C
+
+struct ProcCmd CONST_DATA DesignRoomLoad2_0848929C[] = {
+    PROC_CALL(0x08011299),
+    PROC_SLEEP(1),
+    PROC_REPEAT(0x080113ED),
+    PROC_REPEAT(0x0801153D),
+    PROC_END,
+};
+// end at 084892C4
+
+struct ProcCmd CONST_DATA DesignRoomLoad3_0849E750[] = {
+    PROC_11,
+    PROC_CALL(0x0803B5F5),
+    PROC_YIELD,
+    PROC_REPEAT(0x0803B609),
+    PROC_END,
+};
+// end at 0849E778
+
+struct ProcCmd CONST_DATA DesignRoomLoad4_084892C4[] = {
+    PROC_CALL(0x0801137D),
+    PROC_SLEEP(1),
+    PROC_REPEAT(0x080114A1),
+    PROC_REPEAT(0x0801153D),
+    PROC_END,
+};
+// end at 084892EC
+
+struct ProcCmd CONST_DATA DesignRoomPlaceUnit_0849BDB8[] = {
+    PROC_SET_END_CB(0x080358B9),
+    PROC_SLEEP(1),
+    PROC_CALL(0x080358AD),
+    PROC_SLEEP(8),
+    PROC_END,
+};
+// end at 0849BDE0
+

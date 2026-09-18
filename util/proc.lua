@@ -29,12 +29,9 @@ proc = {
         -- [849EB7C..849EB84]? -- break point on known proc data read on new campaign
         -- 1c8f4 proc start? r0 ProcPtr, r1 root tree -- went to r14 a couple times?
             -- calls 1d264
-            -- 200E414 points to sProcArray
-            ptr_proc_pool = 0x200E390,
-            proc_pool_size = 0x21, -- maybe? since 0x200e414 is 0x84 bytes away divided by 4
-        -- [200e390]! hits 0x801C878 which seems to be ProcInit
-        -- 200e410, 200e414, 200e418,
-        -- 200e414 is sProcAllocListHead maybe?
+            ptr_proc_pool = 0x200D610,
+            proc_pool_size = 0x20,
+        -- 200e390 is sProcAllocList, 200e414 is sProcAllocListHead
         -- 200e418 - 200e434 is gProcTreeRootArray
             ptr_proc_forest = 0x200e418,
             proc_forest_size = 8,
@@ -356,7 +353,7 @@ proc = {
 		return memory.readlong(pointer+0x00)
 	end,
 	
-	proc_get_start2_code_ptr = function(pointer)
+	proc_get_current_script_ptr = function(pointer)
 		return memory.readlong(pointer+0x04)
 	end,
     
@@ -365,22 +362,23 @@ proc = {
 	end, -- r0=0x849e818 - after war room, wrong name 
 	
     
-    proc_get_name = function(pointer) 
-		local code_start   = proc.proc_get_start_code_ptr(pointer)
-		local code_current = proc.proc_get_current_code_ptr(pointer)
-		local code_start2 = proc.proc_get_start2_code_ptr(pointer)
-        local code_diff = (code_current - code_start)
-        if code_diff < 0 then 
-            code_start = code_start2
-            code_diff = (code_current - code_start2) 
-        end 
-        return code_start 
+    proc_get_name = function(pointer)
+		local current_script = proc.proc_get_current_script_ptr(pointer)
+
+		if current_script ~= 0 then
+			return current_script
+		end
+
+		return proc.proc_get_start_code_ptr(pointer)
     end, 
     
 	
 	proc_read_name = function(pointer)
-		-- local name = proc.get_reference().names[memory.readlong(pointer)]
-		local name = proc.get_reference().names[proc.proc_get_name(pointer)]
+		local name = proc.get_reference().names[proc.proc_get_start_code_ptr(pointer)]
+
+		if name == nil then
+			name = proc.get_reference().names[proc.proc_get_name(pointer)]
+		end
 		
 		if name ~= nil then
 			return name
@@ -401,9 +399,8 @@ proc = {
 	end,
     
 	proc_get_state_summary = function(pointer)
-		local code_start   = proc.proc_get_start_code_ptr(pointer)
+		local code_start   = proc.proc_get_name(pointer)
 		local code_current = proc.proc_get_current_code_ptr(pointer)
-		local code_start2 = proc.proc_get_start2_code_ptr(pointer)
 		
 		local activity_str = (function()
 			if proc.proc_is_halted(pointer) then
@@ -418,10 +415,11 @@ proc = {
 		end)()
 		
         local code_diff = (code_current - code_start)
-        if code_diff < 0 then 
-            code_start = code_start2
-            code_diff = (code_current - code_start2) 
-        end 
+
+		if code_diff < 0 then
+			code_start = proc.proc_get_start_code_ptr(pointer)
+			code_diff = code_current - code_start
+		end
         
 		return string.format("%X+%X (%s)", code_start, code_diff, activity_str)
 	end,
@@ -429,34 +427,81 @@ proc = {
 	proc_get_next = function(pointer)
 		return memory.readlong(pointer+0x20)
 	end,
+
+	proc_get_prev = function(pointer)
+		return memory.readlong(pointer+0x1C)
+	end,
+
+	proc_get_parent = function(pointer)
+		return memory.readlong(pointer+0x14)
+	end,
 	
 	proc_get_child = function(pointer)
 		return memory.readlong(pointer+0x18)
+	end,
+
+	proc_is_allocated = function(pointer)
+		return pointer ~= 0 and proc.proc_get_start_code_ptr(pointer) ~= 0
+	end,
+
+	proc_find_tree_root = function(tree)
+		local candidate = 0
+
+		for i = 0, proc.get_reference().proc_pool_size - 1 do
+			local pointer = proc.get_proc(i)
+
+			if proc.proc_is_allocated(pointer) and proc.proc_get_parent(pointer) == tree then
+				candidate = pointer
+			end
+		end
+
+		return candidate
 	end,
 	
 	tree_iterator = function()
 		return function(size, n)
 			if n < size then
 				n = n+1
-				return n, memory.readlong(proc.get_reference().ptr_proc_forest + 4*n)
+				local pointer = memory.readlong(proc.get_reference().ptr_proc_forest + 4*n)
+
+				if pointer == 0 then
+					pointer = proc.proc_find_tree_root(n)
+				end
+
+				return n, pointer
 			end
 		end, proc.get_reference().proc_forest_size, (-1)
 	end,
 	
 	proc_iterator = function(pointer)
-		return function(state, value)
-			if value == nil then
-				if state ~= 0 then
-					return state
-				end
-			else
-				local result = proc.proc_get_next(value)
-				
-				if result ~= 0 then
-					return result
+		while pointer ~= 0 and proc.proc_get_prev(pointer) ~= 0 do
+			pointer = proc.proc_get_prev(pointer)
+		end
+
+		return function(state)
+			if state.count >= proc.get_reference().proc_pool_size or state.next == 0 then
+				return nil
+			end
+
+			local result = state.next
+			state.next = proc.proc_get_next(result)
+			state.count = state.count + 1
+
+			return result
+		end, { next = pointer, count = 0 }, nil
+	end,
+
+	pool_iterator = function()
+		return function(state)
+			while state.index < proc.get_reference().proc_pool_size do
+				local pointer = proc.get_proc(state.index)
+				state.index = state.index + 1
+
+				if proc.proc_is_allocated(pointer) then
+					return pointer
 				end
 			end
-		end, pointer, nil
+		end, { index = 0 }, nil
 	end,
 	
 	child_iterator = function(pointer)
