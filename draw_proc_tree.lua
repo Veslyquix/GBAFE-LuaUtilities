@@ -12,6 +12,7 @@ config = {
 		shrink_name = "F2",
 
 		toggle      = "F6",
+		toggle_script = "F1",
 
 		select_prev  = "Q", -- move the expanded selection to the previous proc
 		select_next  = "W", -- move the expanded selection to the next proc
@@ -24,9 +25,16 @@ config = {
 
 	max_script_lines = 10, -- how many disassembled instructions to show at once for the expanded proc
 	max_script_instructions = 200, -- safety cap on how far a single script is disassembled
+
+	color = {
+		blocked = 0xFF9090FF, -- slightly red: proc is blocked (e.g. by a blocking child)
+		active  = 0x90FF90FF, -- slightly green: proc/instruction is actively running
+		waiting = 0xFFFF90FF, -- slightly yellow: blocked proc's current instruction
+	},
 }
 
 display = true
+show_script = true
 
 name_col_width = config.name_col_width
 starting_line = 0
@@ -58,6 +66,10 @@ function handle_input()
 
 	if press_input:is_pressed(config.key.toggle) then
 		display = not display
+	end
+
+	if press_input:is_pressed(config.key.toggle_script) then
+		show_script = not show_script
 	end
 
 	if press_input:is_pressed(config.key.select_prev) then
@@ -109,23 +121,37 @@ function print_proc(depth, procPointer, suppressed)
 
 	proc_counter = proc_counter + 1
 	local is_selected = (proc_counter == selected_index) and not suppressed
+	local should_expand = show_script and is_selected
+	local is_blocked = proc.proc_is_inactive(procPointer) -- lockCnt != 0, or stuck at PROC_BLOCK
+	local title_color = is_blocked and config.color.blocked or config.color.active
 
 	if not suppressed then
-		local marker = is_selected and "> " or "  "
-		vba_console:print_line(string.rep("  ", depth) .. marker .. make_proc_string(procPointer, name_col_width - 2*depth - 2))
+		local marker = should_expand and "> " or "  "
+		vba_console:print_line(string.rep("  ", depth) .. marker .. make_proc_string(procPointer, name_col_width - 2*depth - 2), title_color)
 	end
 
-	if is_selected then
+	if should_expand then
 		local start_addr = proc.proc_get_name(procPointer)
-		local lines = proc.disassemble_script(start_addr, config.max_script_instructions)
-		local last_line = math.min(#lines, script_scroll + config.max_script_lines)
+		local instructions = proc.disassemble_script(start_addr, config.max_script_instructions)
+		local active_index = proc.proc_get_active_instruction_index(procPointer, instructions)
+		local last_line = math.min(#instructions, script_scroll + config.max_script_lines)
 
 		for i = script_scroll + 1, last_line do
-			vba_console:print_line(string.rep("  ", depth + 1) .. lines[i])
+			local line_color = nil
+
+			if is_blocked and i == active_index then
+				line_color = config.color.waiting
+			elseif is_blocked then
+				line_color = config.color.blocked
+			elseif i == active_index then
+				line_color = config.color.active
+			end
+
+			vba_console:print_line(string.rep("  ", depth + 1) .. instructions[i].text, line_color)
 		end
 
-		if last_line < #lines then
-			vba_console:print_line(string.rep("  ", depth + 1) .. "[...]")
+		if last_line < #instructions then
+			vba_console:print_line(string.rep("  ", depth + 1) .. "[...]", is_blocked and config.color.blocked or nil)
 		end
 
 		-- still walk children so their index slots are reserved for navigation
@@ -142,7 +168,7 @@ end
 
 function print_footer()
 	vba_console:print_line(wsextend_string("Name", name_col_width) .. " pointer+pc")
-	vba_console:print_line(string.format("%s/%s select proc  %s/%s scroll script", config.key.select_prev, config.key.select_next, config.key.script_up, config.key.script_down))
+	vba_console:print_line(string.format("%s scripts  %s/%s select proc  %s/%s scroll script", config.key.toggle_script, config.key.select_prev, config.key.select_next, config.key.script_up, config.key.script_down))
 end
 
 -- Uncomment the following to fix Proc Names in FE8U
@@ -211,6 +237,7 @@ end)
 
 print(" - GBAFE PROC TREE DRAWING SCRIPT - (author: StanH_)")
 print(string.format("Use %s to toggle tree display on or off", config.key.toggle))
+print(string.format("Use %s to toggle expanded proc script display", config.key.toggle_script))
 print(string.format("Use %s and %s to navigate tree", config.key.scroll_up, config.key.scroll_down))
 print(string.format("Use %s and %s to change name column size", config.key.expand_name, config.key.shrink_name))
 print(string.format("Use %s and %s to select which proc's script is expanded", config.key.select_prev, config.key.select_next))

@@ -233,8 +233,9 @@ proc = {
 	-- terminating opcode (END/BLOCK) or `max_instructions` is hit.
 	-- PROC_JUMP doesn't stop the listing - it continues from the jump target,
 	-- same as the real interpreter would.
+	-- returns a list of {address, opcode, arg, ptr, text} entries.
 	disassemble_script = function(address, max_instructions)
-		local lines = {}
+		local instructions = {}
 		local addr = address
 
 		for i = 1, max_instructions do
@@ -242,7 +243,13 @@ proc = {
 			local arg = memory.readshort(addr + 2)
 			local ptr = memory.readlong(addr + 4)
 
-			table.insert(lines, proc.format_instruction(opc, arg, ptr))
+			table.insert(instructions, {
+				address = addr,
+				opcode = opc,
+				arg = arg,
+				ptr = ptr,
+				text = proc.format_instruction(opc, arg, ptr),
+			})
 
 			if opc == 0x0D then
 				addr = ptr
@@ -255,7 +262,69 @@ proc = {
 			end
 		end
 
-		return lines
+		return instructions
+	end,
+
+	-- true while this proc's execution is blocked (proc_lockCnt != 0), most
+	-- commonly because a PROC_START_CHILD_BLOCKING child of it hasn't ended yet.
+	-- while blocked, the real interpreter runs neither this proc's script nor
+	-- its idle callback for the frame.
+	proc_is_blocked = function(pointer)
+		return memory.readbyte(pointer+0x28) ~= 0
+	end,
+
+	-- proc_idleCb: non-zero while script execution is parked on something other
+	-- than the normal instruction stream - either a PROC_REPEAT target (called
+	-- directly every frame instead of stepping proc_scrUnk) or a sleep countdown.
+	proc_get_idle_cb = function(pointer)
+		return memory.readlong(pointer+0x10)
+	end,
+
+	-- true while proc_scrUnk is parked on a PROC_BLOCK instruction: ProcCmd_Block
+	-- always returns FALSE without ever advancing the cursor, so once a proc
+	-- reaches one it's stuck there permanently (until something external, e.g. a
+	-- SetEndFunc callback, ends or redirects it) - not "actively" running.
+	proc_is_stuck_at_block = function(pointer)
+		if proc.proc_get_idle_cb(pointer) ~= 0 then
+			return false -- parked on a repeat/sleep callback instead, not on the raw script
+		end
+
+		return memory.readshort(proc.proc_get_current_code_ptr(pointer)) == 0x10
+	end,
+
+	-- true if this proc should be treated as inactive for display purposes:
+	-- genuinely blocked (proc_lockCnt != 0), or permanently stuck on PROC_BLOCK
+	proc_is_inactive = function(pointer)
+		return proc.proc_is_blocked(pointer) or proc.proc_is_stuck_at_block(pointer)
+	end,
+
+	-- finds which disassembled instruction (from disassemble_script) is the one
+	-- actually executing every frame for this proc, if any:
+	--  - if idle callback is a PROC_REPEAT target in this script, that PROC_REPEAT
+	--  - otherwise, whichever instruction proc_scrUnk currently points to (covers
+	--    manual LABEL/GOTO loops and plain in-progress scripts alike)
+	proc_get_active_instruction_index = function(pointer, instructions)
+		local idle_cb = proc.proc_get_idle_cb(pointer)
+
+		if idle_cb ~= 0 then
+			for i, instr in ipairs(instructions) do
+				if instr.opcode == 0x03 and instr.ptr == idle_cb then
+					return i
+				end
+			end
+
+			return nil
+		end
+
+		local current = proc.proc_get_current_code_ptr(pointer)
+
+		for i, instr in ipairs(instructions) do
+			if instr.address == current then
+				return i
+			end
+		end
+
+		return nil
 	end,
 	
 	get_proc = function(index)

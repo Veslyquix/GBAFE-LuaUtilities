@@ -27,15 +27,21 @@ vba_console = {
 		this.current_line = startLine
 	end,
 	
-	print_line = function(this, line)
+	print_line = function(this, line, color)
 		if (this.current_line >= 0) and (this.current_line < (this.geometry.h - this.margin.y*2)/8) then
-			gui.text(
-				this.geometry.x + this.margin.x,
-				this.geometry.y + this.margin.y + this.current_line*8,
-				line
-			)
+			local x = this.geometry.x + this.margin.x
+			local y = this.geometry.y + this.margin.y + this.current_line*8
+
+			-- passed as separate calls (rather than always passing `color`,
+			-- which may be nil) since some gui.text implementations choke on
+			-- an explicit nil color argument rather than treating it as omitted
+			if color ~= nil then
+				gui.text(x, y, line, color)
+			else
+				gui.text(x, y, line)
+			end
 		end
-		
+
 		this.current_line = this.current_line + 1
 	end
 }
