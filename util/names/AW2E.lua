@@ -105,8 +105,6 @@ return {
 	[0x08088045] = "CoDesignC2_08088045",
 	[0x080880BD] = "CoDesignC2_IDLE_080880BD",
 	[0x0808844D] = "CoDesignC2_IDLE_0808844D",
-	[0x08616EFC] = "CoDesignC4",
-	[0x0808A3A1] = "CoDesignC4_IDLE_0808A3A1",
 	[0x0806F711] = "SoundRoom_0806F711",
 	[0x0848B5AC] = "WaitForLaser",
 	[0x0801C781] = "WaitForLaser_CB_0801C781",
@@ -120,10 +118,6 @@ return {
 	[0x0848929C] = "SomeFade",
 	[0x08011299] = "SomeFade_08011299",
 	[0x080113ED] = "SomeFade_IDLE_080113ED",
-	[0x0801153D] = "SomeFade_IDLE_0801153D",
-	[0x084892C4] = "DesignRoomLoad3",
-	[0x0801137D] = "DesignRoomLoad3_0801137D",
-	[0x080114A1] = "DesignRoomLoad3_IDLE_080114A1",
 	[0x0849BDB8] = "DesignRoomPlaceUnit",
 	[0x080358B9] = "DesignRoomPlaceUnit_CB_080358B9",
 	[0x080358AD] = "DesignRoomPlaceUnit_080358AD",
@@ -193,4 +187,91 @@ return {
 	[0x0849BE38] = "SelectUnit",
 	[0x080363D1] = "SelectUnit_CB_080363D1",
 	[0x08036385] = "SelectUnit_IDLE_08036385",
+
+	[0x08616D1C] = "WarRoomScroll",
+	[0x0802481D] = "WarRoomScroll_CB_0802481D",
+	[0x08086D99] = "WarRoomScroll_08086D99",
+	[0x08086DB5] = "WarRoomScroll_08086DB5",
+	[0x08086DD5] = "WarRoomScroll_08086DD5",
+	[0x08086DF5] = "WarRoomScroll_08086DF5",
+
+	[0x08616C54] = "PreviewMap",
+	[0x08085B31] = "PreviewMap_08085B31",
+	[0x08085F91] = "PreviewMap_IDLE_08085F91",
+
+	[0x08616DB4] = "PreviewMapRecords",
+	[0x080879B1] = "PreviewMapRecords_CB_080879B1",
+	[0x080879D9] = "PreviewMapRecords_080879D9",
+	[0x08087A11] = "PreviewMapRecords_IDLE_08087A11",
+
+	[0x08616CCC] = "WarRoomSelectMap",
+
+	[0x086165C0] = "WarRoomMapSelected",
+	[0x0807C589] = "WarRoomMapSelected_0807C589",
+	[0x0807C615] = "WarRoomMapSelected_0807C615",
+	[0x0807C979] = "WarRoomMapSelected_0807C979",
+	[0x0807C995] = "WarRoomMapSelected_IDLE_0807C995",
+
+	[0x08615CA0] = "ScrollBG3",
+	[0x08078DD9] = "ScrollBG3_IDLE_08078DD9",
+
+	[0x08616710] = "EndCoSelect",
+	[0x08078E05] = "EndCoSelect_08078E05",
+	[0x080733B9] = "EndCoSelect_080733B9",
+	[0x0807F8C1] = "EndCoSelect_0807F8C1",
+
+	[0x08616B74] = "StartCoInfoScreen",
+	[0x080849BD] = "StartCoInfoScreen_080849BD",
+	[0x080116E9] = "StartCoInfoScreen_080116E9",
+	[0x080849C9] = "StartCoInfoScreen_080849C9",
+	[0x08084BD1] = "StartCoInfoScreen_IDLE_08084BD1",
+
+	[0x08616740] = "BlockWarRoomSelection",
+
+	[0x08616BFC] = "EndCoInfoScreen",
+	[0x08014879] = "EndCoInfoScreen_08014879",
+
+	[0x08613E54] = "FadePalWhite",
+	[0x08071B9D] = "FadePalWhite_IDLE_08071B9D",
+
+	[0x084892C4] = "FadeLoadMap",
+	[0x0801137D] = "FadeLoadMap_0801137D",
+	[0x080114A1] = "FadeLoadMap_IDLE_080114A1",
+	[0x0801153D] = "FadeLoadMap_IDLE_0801153D",
+
+	[0x0849AA68] = "BlockMapStartCoInfo",
+	[0x08034F7D] = "BlockMapStartCoInfo_08034F7D",
+	[0x080366A5] = "BlockMapStartCoInfo_080366A5",
+	[0x08034FD9] = "BlockMapStartCoInfo_08034FD9",
+	[0x08034F8D] = "BlockMapStartCoInfo_08034F8D",
+
+	[0x0848923C] = "FadePalBlack",
+	[0x08011055] = "FadePalBlack_08011055",
+	[0x080110A5] = "FadePalBlack_IDLE_080110A5",
+
+	[0x08616A40] = "MainMenuC3_Resume",
+
+	[0x08616EFC] = "PutFace",
+	[0x0808A3A1] = "PutFace_IDLE_0808A3A1",
+
+	[0x0849BC98] = "LinkC2",
+	[0x080339B1] = "LinkC2_080339B1",
+	[0x08034131] = "LinkC2_IDLE_08034131",
+	[0x0849BC50] = "LinkC2_WHILE_EXISTS_0849BC50",
+	[0x08034209] = "LinkC2_08034209",
+	[0x08034231] = "LinkC2_08034231",
+
+	[0x08033B3D] = "LinkC3_IDLE_08033B3D",
+	[0x08033C69] = "LinkC3_IDLE_08033C69",
+	[0x08033EC9] = "LinkC3_IDLE_08033EC9",
+	[0x08033F1D] = "LinkC3_IDLE_08033F1D",
+	[0x08033FFD] = "LinkC3_IDLE_08033FFD",
+	[0x0803405D] = "LinkC3_IDLE_0803405D",
+
+	[0x0849BB50] = "LinkC4",
+	[0x08033801] = "LinkC4_IDLE_08033801",
+
+	[0x0849BB80] = "LinkC3_Parallel",
+	[0x080338FD] = "LinkC3_Parallel_080338FD",
+	[0x08033911] = "LinkC3_Parallel_IDLE_08033911",
 }

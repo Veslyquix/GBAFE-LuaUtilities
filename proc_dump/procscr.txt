@@ -328,9 +328,9 @@ PROC_LABEL(0),
 };
 // end at 08614134
 
-struct ProcCmd CONST_DATA CoDesignC4_08616EFC[] = {
-#define CoDesignC4_IDLE_0808A3A1 0x0808A3A0+1
-    PROC_REPEAT(CoDesignC4_IDLE_0808A3A1),
+struct ProcCmd CONST_DATA PutFace_08616EFC[] = {
+#define PutFace_IDLE_0808A3A1 0x0808A3A0+1
+    PROC_REPEAT(PutFace_IDLE_0808A3A1),
     PROC_END,
 };
 // end at 08616F0C
@@ -423,14 +423,14 @@ struct ProcCmd CONST_DATA DesignRoomLoad2_0849E750[] = {
 };
 // end at 0849E778
 
-struct ProcCmd CONST_DATA DesignRoomLoad3_084892C4[] = {
-#define DesignRoomLoad3_0801137D 0x0801137C+1
-#define DesignRoomLoad3_IDLE_080114A1 0x080114A0+1
-#define DesignRoomLoad3_IDLE_0801153D 0x0801153C+1
-    PROC_CALL(DesignRoomLoad3_0801137D),
+struct ProcCmd CONST_DATA FadeLoadMap_084892C4[] = {
+#define FadeLoadMap_0801137D 0x0801137C+1
+#define FadeLoadMap_IDLE_080114A1 0x080114A0+1
+#define FadeLoadMap_IDLE_0801153D 0x0801153C+1
+    PROC_CALL(FadeLoadMap_0801137D),
     PROC_SLEEP(1),
-    PROC_REPEAT(DesignRoomLoad3_IDLE_080114A1),
-    PROC_REPEAT(DesignRoomLoad3_IDLE_0801153D),
+    PROC_REPEAT(FadeLoadMap_IDLE_080114A1),
+    PROC_REPEAT(FadeLoadMap_IDLE_0801153D),
     PROC_END,
 };
 // end at 084892EC
@@ -622,4 +622,246 @@ struct ProcCmd CONST_DATA SelectUnit_0849BE38[] = {
     PROC_BLOCK,
 };
 // end at 0849BE50
+
+struct ProcCmd CONST_DATA WarRoomScroll_08616D1C[] = {
+#define WarRoomScroll_CB_0802481D 0x0802481C+1
+#define WarRoomScroll_08086D99 0x08086D98+1
+#define WarRoomScroll_08086DB5 0x08086DB4+1
+#define WarRoomScroll_08086DD5 0x08086DD4+1
+#define WarRoomScroll_08086DF5 0x08086DF4+1
+    PROC_SET_END_CB(WarRoomScroll_CB_0802481D),
+    PROC_YIELD,
+    PROC_CALL(WarRoomScroll_08086D99),
+    PROC_YIELD,
+    PROC_CALL(WarRoomScroll_08086DB5),
+    PROC_YIELD,
+    PROC_CALL(WarRoomScroll_08086DD5),
+    PROC_YIELD,
+    PROC_CALL(WarRoomScroll_08086DF5),
+    PROC_END,
+};
+// end at 08616D6C
+
+struct ProcCmd CONST_DATA PreviewMap_08616C54[] = {
+#define PreviewMap_08085B31 0x08085B30+1
+#define PreviewMap_IDLE_08085F91 0x08085F90+1
+    PROC_1D(30),
+    PROC_YIELD,
+    PROC_CALL(PreviewMap_08085B31),
+    PROC_1E(30),
+    PROC_YIELD,
+    PROC_BREAK_EACH(0x08616CF4),
+    PROC_REPEAT(PreviewMap_IDLE_08085F91),
+    PROC_END,
+};
+// end at 08616C94
+
+struct ProcCmd CONST_DATA PreviewMapRecords_08616DB4[] = {
+#define PreviewMapRecords_CB_080879B1 0x080879B0+1
+#define PreviewMapRecords_080879D9 0x080879D8+1
+#define PreviewMapRecords_IDLE_08087A11 0x08087A10+1
+    PROC_SET_END_CB(PreviewMapRecords_CB_080879B1),
+    PROC_YIELD,
+    PROC_CALL(PreviewMapRecords_080879D9),
+    PROC_REPEAT(PreviewMapRecords_IDLE_08087A11),
+    PROC_END,
+};
+// end at 08616DDC
+
+struct ProcCmd CONST_DATA WarRoomSelectMap_08616CCC[] = {
+    PROC_11,
+    PROC_1D(30),
+    PROC_YIELD,
+    PROC_END_EACH(0x08616C54),
+    PROC_END,
+};
+// end at 08616CF4
+
+struct ProcCmd CONST_DATA WarRoomMapSelected_086165C0[] = {
+#define WarRoomMapSelected_0807C589 0x0807C588+1
+#define WarRoomMapSelected_0807C615 0x0807C614+1
+#define WarRoomMapSelected_0807C979 0x0807C978+1
+#define WarRoomMapSelected_IDLE_0807C995 0x0807C994+1
+    PROC_CALL(WarRoomMapSelected_0807C589),
+PROC_LABEL(0),
+    PROC_1D(30),
+    PROC_CALL(WarRoomMapSelected_0807C615),
+    PROC_1E(30),
+    PROC_CALL(WarRoomMapSelected_0807C979),
+    PROC_REPEAT(WarRoomMapSelected_IDLE_0807C995),
+    PROC_END,
+};
+// end at 08616600
+
+struct ProcCmd CONST_DATA WarRoomMapSelected_086165C0[] = {
+#define WarRoomMapSelected_0807C589 0x0807C588+1
+#define WarRoomMapSelected_0807C615 0x0807C614+1
+#define WarRoomMapSelected_0807C979 0x0807C978+1
+#define WarRoomMapSelected_IDLE_0807C995 0x0807C994+1
+    PROC_CALL(WarRoomMapSelected_0807C589),
+PROC_LABEL(0),
+    PROC_1D(30),
+    PROC_CALL(WarRoomMapSelected_0807C615),
+    PROC_1E(30),
+    PROC_CALL(WarRoomMapSelected_0807C979),
+    PROC_REPEAT(WarRoomMapSelected_IDLE_0807C995),
+    PROC_END,
+};
+// end at 08616600
+
+struct ProcCmd CONST_DATA ScrollBG3_08615CA0[] = {
+#define ScrollBG3_IDLE_08078DD9 0x08078DD8+1
+    PROC_REPEAT(ScrollBG3_IDLE_08078DD9),
+    PROC_END,
+};
+// end at 08615CB0
+
+struct ProcCmd CONST_DATA EndCoSelect_08616710[] = {
+#define EndCoSelect_08078E05 0x08078E04+1
+#define EndCoSelect_080733B9 0x080733B8+1
+#define EndCoSelect_0807F8C1 0x0807F8C0+1
+    PROC_1D(30),
+    PROC_CALL(EndCoSelect_08078E05),
+    PROC_CALL(EndCoSelect_080733B9),
+    PROC_CALL(EndCoSelect_0807F8C1),
+    PROC_START_CHILD_BLOCKING(0x08616B74),
+    PROC_END,
+};
+// end at 08616740
+
+struct ProcCmd CONST_DATA StartCoInfoScreen_08616B74[] = {
+#define StartCoInfoScreen_080849BD 0x080849BC+1
+#define StartCoInfoScreen_080116E9 0x080116E8+1
+#define StartCoInfoScreen_080849C9 0x080849C8+1
+#define StartCoInfoScreen_IDLE_08084BD1 0x08084BD0+1
+    PROC_CALL(StartCoInfoScreen_080849BD),
+    PROC_1D(30),
+    PROC_CALL(StartCoInfoScreen_080116E9),
+    PROC_CALL(StartCoInfoScreen_080849C9),
+    PROC_1E(30),
+    PROC_REPEAT(StartCoInfoScreen_IDLE_08084BD1),
+    PROC_END,
+};
+// end at 08616BAC
+
+struct ProcCmd CONST_DATA BlockWarRoomSelection_08616740[] = {
+    PROC_11,
+    PROC_BLOCK,
+};
+// end at 08616750
+
+struct ProcCmd CONST_DATA EndCoInfoScreen_08616BFC[] = {
+#define EndCoInfoScreen_08014879 0x08014878+1
+    PROC_11,
+    PROC_1D(30),
+    PROC_CALL(EndCoInfoScreen_08014879),
+    PROC_END_EACH(0x08616B74),
+    PROC_END,
+};
+// end at 08616C24
+
+struct ProcCmd CONST_DATA FadePalWhite_08613E54[] = {
+#define FadePalWhite_IDLE_08071B9D 0x08071B9C+1
+    PROC_REPEAT(FadePalWhite_IDLE_08071B9D),
+    PROC_END,
+};
+// end at 08613E64
+
+struct ProcCmd CONST_DATA BlockMapStartCoInfo_0849AA68[] = {
+#define BlockMapStartCoInfo_08034F7D 0x08034F7C+1
+#define BlockMapStartCoInfo_080366A5 0x080366A4+1
+#define BlockMapStartCoInfo_08034FD9 0x08034FD8+1
+#define BlockMapStartCoInfo_08034F8D 0x08034F8C+1
+    PROC_CALL(BlockMapStartCoInfo_08034F7D),
+    PROC_1D(30),
+    PROC_CALL(BlockMapStartCoInfo_080366A5),
+    PROC_START_CHILD_BLOCKING(0x08616B74),
+    PROC_CALL(BlockMapStartCoInfo_08034FD9),
+    PROC_1E(30),
+    PROC_CALL(BlockMapStartCoInfo_08034F8D),
+    PROC_END,
+};
+// end at 0849AAA8
+
+struct ProcCmd CONST_DATA FadePalBlack_0848923C[] = {
+#define FadePalBlack_08011055 0x08011054+1
+#define FadePalBlack_IDLE_080110A5 0x080110A4+1
+    PROC_CALL(FadePalBlack_08011055),
+    PROC_YIELD,
+    PROC_REPEAT(FadePalBlack_IDLE_080110A5),
+    PROC_END,
+};
+// end at 0848925C
+
+struct ProcCmd CONST_DATA MainMenuC3_Resume_08616A40[] = {
+#define MainMenuC3_Resume_0808135D 0x0808135C+1
+#define MainMenuC3_Resume_IDLE_08081D31 0x08081D30+1
+    PROC_CALL(MainMenuC3_Resume_0808135D),
+    PROC_REPEAT(MainMenuC3_Resume_IDLE_08081D31),
+    PROC_END,
+};
+// end at 08616A58
+
+struct ProcCmd CONST_DATA LinkC2_0849BC98[] = {
+#define LinkC2_080339B1 0x080339B0+1
+#define LinkC2_IDLE_08034131 0x08034130+1
+#define LinkC2_WHILE_EXISTS_0849BC50 0x0849BC50
+#define LinkC2_08034209 0x08034208+1
+#define LinkC2_08034231 0x08034230+1
+PROC_LABEL(4),
+    PROC_1B(400),
+    PROC_CALL(LinkC2_080339B1),
+    PROC_1E(30),
+    PROC_SLEEP(36),
+PROC_LABEL(0),
+    PROC_REPEAT(LinkC2_IDLE_08034131),
+PROC_LABEL(1),
+    PROC_WHILE_EXISTS(LinkC2_WHILE_EXISTS_0849BC50),
+    PROC_CALL(LinkC2_08034209),
+    PROC_YIELD,
+    PROC_CALL(LinkC2_08034231),
+    PROC_GOTO(3),
+PROC_LABEL(2),
+    PROC_1D(30),
+PROC_LABEL(3),
+    PROC_END,
+};
+// end at 0849BD20
+
+struct ProcCmd CONST_DATA LinkC3_0849BC50[] = {
+#define LinkC3_IDLE_08033B3D 0x08033B3C+1
+#define LinkC3_IDLE_08033C69 0x08033C68+1
+#define LinkC3_IDLE_08033EC9 0x08033EC8+1
+#define LinkC3_IDLE_08033F1D 0x08033F1C+1
+#define LinkC3_IDLE_08033FFD 0x08033FFC+1
+#define LinkC3_IDLE_0803405D 0x0803405C+1
+PROC_LABEL(1),
+    PROC_REPEAT(LinkC3_IDLE_08033B3D),
+PROC_LABEL(0),
+    PROC_REPEAT(LinkC3_IDLE_08033C69),
+    PROC_REPEAT(LinkC3_IDLE_08033EC9),
+    PROC_REPEAT(LinkC3_IDLE_08033F1D),
+    PROC_REPEAT(LinkC3_IDLE_08033FFD),
+    PROC_REPEAT(LinkC3_IDLE_0803405D),
+    PROC_END,
+};
+// end at 0849BC98
+
+struct ProcCmd CONST_DATA LinkC4_0849BB50[] = {
+#define LinkC4_IDLE_08033801 0x08033800+1
+    PROC_11,
+    PROC_REPEAT(LinkC4_IDLE_08033801),
+    PROC_END,
+};
+// end at 0849BB68
+
+struct ProcCmd CONST_DATA LinkC3_Parallel_0849BB80[] = {
+#define LinkC3_Parallel_080338FD 0x080338FC+1
+#define LinkC3_Parallel_IDLE_08033911 0x08033910+1
+    PROC_11,
+    PROC_CALL(LinkC3_Parallel_080338FD),
+    PROC_REPEAT(LinkC3_Parallel_IDLE_08033911),
+    PROC_END,
+};
+// end at 0849BBA0
 

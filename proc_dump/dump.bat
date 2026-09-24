@@ -4,7 +4,7 @@
 :loop 
 set /p "addr=Enter Address/Name: "
 
-dump-proc.py %addr% --save
+python dump-proc.py %addr% --save
 goto loop 
 
 pause 
